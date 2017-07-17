@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -17,6 +18,7 @@ public class TaskGroup {
     public void runTasks() throws InterruptedException {
         // Logging config
         Logger logger = Logger.getLogger("DaggerLogger");
+        logger.setLevel(Level.SEVERE);
 
         // Initialize executors
         ThreadPoolExecutor executorService = (ThreadPoolExecutor)Executors.newCachedThreadPool();

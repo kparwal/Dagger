@@ -34,10 +34,13 @@ public abstract class Task implements Callable {
 
     public boolean relax(Task parent, Object argument) {
         if (argument != null && parent != null) {
-            arguments.put(parent.getName(), argument);
+            if (parents.contains(parent)) {
+                arguments.put(parent.getName(), argument);
+                numRemainingParents--;
+                return (numRemainingParents == 0);
+            }
         }
-        numRemainingParents--;
-        return (numRemainingParents == 0);
+        return false;
     }
 
     public Object call() throws Exception {
