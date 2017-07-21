@@ -6,11 +6,17 @@ import java.util.concurrent.Callable;
 /**
  * Created by Keshav Parwal
  */
-public abstract class Task implements Callable {
+public abstract class Task<T> implements Callable {
 
-    private ArrayList<Task> parents;
-    HashMap<String, Object> arguments = new HashMap<>();
+    private ArrayList<Task> ancestors;
+    HashMap<String, T> arguments = new HashMap<>();
     String name;
+
+    public ArrayList<Task> getDescendants() {
+        return descendants;
+    }
+
+    private ArrayList<Task> descendants;
 
     public int getNumRemainingParents() {
         return numRemainingParents;
@@ -18,10 +24,17 @@ public abstract class Task implements Callable {
 
     int numRemainingParents;
 
-    public Task(String name, Task... parentTasks) {
-        parents = new ArrayList<>(Arrays.asList(parentTasks));
-        numRemainingParents = parentTasks.length;
+    public Task(String name) {
+        descendants = new ArrayList<>();
         this.name = name;
+    }
+
+    public void setAncestors(Task... parentTasks) {
+        ancestors = new ArrayList<>(Arrays.asList(parentTasks));
+        for (Task ancestor : ancestors) {
+            ancestor.descendants.add(this);
+        }
+        numRemainingParents = parentTasks.length;
     }
 
     public String getName() {
@@ -29,25 +42,28 @@ public abstract class Task implements Callable {
     }
 
     public int getNumParents() {
-        return parents.size();
+        return ancestors.size();
     }
 
-    public boolean relax(Task parent, Object argument) {
+    public boolean relax(Task parent, ReturnValue<T> argument) {
         if (argument != null && parent != null) {
-            if (parents.contains(parent)) {
-                arguments.put(parent.getName(), argument);
+            if (ancestors.contains(parent)) {
+                arguments.put(argument.getKey(), argument.getValue());
                 numRemainingParents--;
-                return (numRemainingParents == 0);
+                if (numRemainingParents == 0) {
+                    numRemainingParents = ancestors.size();
+                    return true;
+                }
             }
         }
         return false;
     }
 
     public Object call() throws Exception {
-        Object returnObject = null;
+        ReturnValue<T> returnObject = null;
         returnObject = this.run();
         return returnObject;
     }
 
-    public abstract Object run() throws Exception;
+    public abstract ReturnValue<T> run() throws Exception;
 }

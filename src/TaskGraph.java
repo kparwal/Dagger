@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -10,10 +7,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Created by Keshav Parwal
+ * Created by Keshav Parwal on 7/20/17.
  */
-public class TaskGroup {
+
+public class TaskGraph {
     private ArrayList<Task> tasks = new ArrayList<>();
+    private Set<Task> startingSet = new HashSet<>();
 
     public void runTasks() throws InterruptedException {
         // Logging config
@@ -21,40 +20,39 @@ public class TaskGroup {
         logger.setLevel(Level.SEVERE);
 
         // Initialize executors
-        ThreadPoolExecutor executorService = (ThreadPoolExecutor)Executors.newCachedThreadPool();
+        ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newCachedThreadPool();
         ExecutorCompletionService<Task> executorCompletionService = new ExecutorCompletionService<>(executorService);
-        Map<Future, Task> futureTaskMap = new HashMap<>();
+        Map<Future<ReturnValue>, Task> futureTaskMap = new HashMap<>();
         int numTasks = tasks.size();
 
         // Add preliminary tasks to queue
-        for (Task task : tasks) {
-            if (task.getNumRemainingParents() == 0) {
-                Future future = executorCompletionService.submit(task);
-                futureTaskMap.put(future, task);
-                logger.info("Added task " + task.getName());
-            }
-        }
+        startingSet.forEach(task -> {
+            Future<ReturnValue> future = executorCompletionService.submit(task);
+            futureTaskMap.put(future, task);
+            logger.info("Added task " + task.getName());
+        });
 
         // Consumer loop for Futures
-        while (numTasks > 0) {
+        while (futureTaskMap.size() > 0) {
             Future future = executorCompletionService.take();
             try {
-                Object taskResult = future.get();
-                numTasks--;
+                ReturnValue taskResult = (ReturnValue)future.get();
                 Task finishedTask = futureTaskMap.get(future);
+                futureTaskMap.remove(future);
                 logger.info("Finished Task: " + finishedTask.getName() + ". " + numTasks + " remaining.");
-                for (Task task : tasks) {
+                finishedTask.getDescendants().forEach(taskObj -> {
+                    Task task = (Task)taskObj;
                     if (task.relax(finishedTask, taskResult)) {
                         Future f = executorCompletionService.submit(task);
                         futureTaskMap.put(f, task);
                         logger.info("Added task " + task.getName());
                     }
-                }
+                });
             } catch (Exception e) {
                 e.printStackTrace();
                 logger.severe("ERROR: TASKS ABORTED");
                 executorService.shutdownNow();
-                numTasks = 0;
+                break;
             }
         }
         executorService.shutdown();
@@ -62,5 +60,9 @@ public class TaskGroup {
 
     public void addTasks(Task... tasks) {
         this.tasks.addAll(Arrays.asList(tasks));
+    }
+
+    public void addStartingSet(Task... tasks) {
+        this.startingSet.addAll(Arrays.asList(tasks));
     }
 }

@@ -5,11 +5,11 @@ import java.util.NoSuchElementException;
  */
 public class ExceptionTask extends Task {
     public ExceptionTask(String name, Task... parentTasks) {
-        super(name, parentTasks);
+        super(name);
     }
 
     @Override
-    public Object run() throws Exception {
+    public ReturnValue<Integer> run() throws Exception {
         throw new NoSuchElementException("THIS IS WEIRD: " + name);
     }
 }
