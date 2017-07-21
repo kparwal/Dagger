@@ -1,7 +1,9 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by Keshav Parwal
@@ -9,7 +11,7 @@ import java.util.concurrent.Callable;
 public abstract class Task<T> implements Callable {
 
     private ArrayList<Task> ancestors;
-    HashMap<String, T> arguments = new HashMap<>();
+    Map<String, T> arguments = new ConcurrentHashMap<>();
     String name;
 
     public ArrayList<Task> getDescendants() {
