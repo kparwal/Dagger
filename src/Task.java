@@ -8,23 +8,21 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by Keshav Parwal
  */
-public abstract class Task<T> implements Callable {
+public abstract class Task implements Callable {
 
     private ArrayList<Task> ancestors;
-    Map<String, T> arguments = new ConcurrentHashMap<>();
+    Map<String, Object> arguments = new ConcurrentHashMap<>();
     String name;
+    int numRemainingParents;
+    private ArrayList<Task> descendants;
 
     public ArrayList<Task> getDescendants() {
         return descendants;
     }
 
-    private ArrayList<Task> descendants;
-
     public int getNumRemainingParents() {
         return numRemainingParents;
     }
-
-    int numRemainingParents;
 
     public Task(String name) {
         descendants = new ArrayList<>();
@@ -47,7 +45,7 @@ public abstract class Task<T> implements Callable {
         return ancestors.size();
     }
 
-    public boolean relax(Task parent, ReturnValue<T> argument) {
+    public boolean relax(Task parent, ReturnValue argument) {
         if (argument != null && parent != null) {
             if (ancestors.contains(parent)) {
                 arguments.put(argument.getKey(), argument.getValue());
@@ -62,10 +60,14 @@ public abstract class Task<T> implements Callable {
     }
 
     public Object call() throws Exception {
-        ReturnValue<T> returnObject = null;
+        ReturnValue returnObject = null;
         returnObject = this.run();
         return returnObject;
     }
 
-    public abstract ReturnValue<T> run() throws Exception;
+    public void printString(String message) {
+        System.out.println(name + ": " + message);
+    }
+
+    public abstract ReturnValue run() throws Exception;
 }

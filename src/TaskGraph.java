@@ -11,6 +11,7 @@ import java.util.logging.Logger;
  */
 
 public class TaskGraph {
+
     private ArrayList<Task> tasks = new ArrayList<>();
     private Set<Task> startingSet = new HashSet<>();
 
@@ -41,7 +42,7 @@ public class TaskGraph {
                 futureTaskMap.remove(future);
                 logger.info("Finished Task: " + finishedTask.getName() + ". " + numTasks + " remaining.");
                 finishedTask.getDescendants().forEach(taskObj -> {
-                    Task task = (Task)taskObj;
+                    Task task = taskObj;
                     if (task.relax(finishedTask, taskResult)) {
                         Future f = executorCompletionService.submit(task);
                         futureTaskMap.put(f, task);
